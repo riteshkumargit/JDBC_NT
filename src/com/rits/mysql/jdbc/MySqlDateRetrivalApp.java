@@ -6,24 +6,26 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 import java.util.Scanner;
 
-public class MySqlDateInsertApp {
+public class MySqlDateRetrivalApp {
 
-	private static String SQLINSERTQUERY = "insert into employee values(?,?,?,?,?,?)";
+	private static String SQLINSERTQUERY = "select * from employee where eid=?";
 	
 	public static void main(String[] args) {
 		
 		FileInputStream fileInputStream = null;
 		Properties properties = null;
 		Connection connection = null;
+		ResultSet resultSet = null;
 		PreparedStatement preparedStatement = null;
 		Scanner scanner = null;
-		SimpleDateFormat sdf1 = null, sdf2 = null;
+		SimpleDateFormat sdf = null;
 		Date udob = null, udom = null;
 		java.sql.Date sqlDob = null, sqlDom = null, sqlDoj = null;
 		
@@ -38,25 +40,10 @@ public class MySqlDateInsertApp {
 		System.out.println(fileName);
 		
 		try {
+			
 			scanner = new Scanner(System.in);
-			
-			System.out.println("Enter the employee id:: ");
+			System.out.println("Enter the id to get record:: ");
 			eid = scanner.nextInt();
-			
-			System.out.println("Enter the employee name:: ");
-			ename = scanner.next();
-			
-			System.out.println("Enter the employee dob(DD-MM-YYYY):: ");
-			edob = scanner.next();
-			
-			System.out.println("Enter the employee dom(MM-DD-YYYY):: ");
-			edom = scanner.next();
-			
-			System.out.println("Enter the employee doj(YYYY-MM-DD):: ");
-			edoj = scanner.next();
-			
-			System.out.println("Enter the employee address:: ");
-			eaddress = scanner.next();
 			
 			fileInputStream = new FileInputStream(fileName);
 			properties = new Properties();
@@ -70,48 +57,35 @@ public class MySqlDateInsertApp {
 			System.out.println(username);
 			System.out.println(password);
 			
-			sdf1 = new SimpleDateFormat("dd-mm-yyyy");
-			
-			if(sdf1 != null)
-			{
-				udob = sdf1.parse(edob);
-				if(udob != null)
-				{
-					sqlDob = new java.sql.Date(udob.getTime());
-				}
-			}
-			
-			sdf2 = new SimpleDateFormat("MM-DD-YYYY");
-			if(sdf2 != null)
-			{
-				udom = sdf2.parse(edom);
-				if(udom != null)
-				{
-					sqlDom = new java.sql.Date(udom.getTime());
-				}
-			}
-			sqlDoj = java.sql.Date.valueOf(edoj);
-			
 			connection = DriverManager.getConnection(url,username,password);
 			if(connection != null)
 			{
 				preparedStatement =  connection.prepareStatement(SQLINSERTQUERY);
 				if(preparedStatement != null)
 				{
-					preparedStatement.setInt(1,eid);
-					preparedStatement.setString(2,ename);
-					preparedStatement.setDate(3,sqlDob);
-					preparedStatement.setDate(4,sqlDom);
-					preparedStatement.setDate(5,sqlDoj);
-					preparedStatement.setString(6, eaddress);
-					
-					int rowAffected = preparedStatement.executeUpdate();
-					
-					if(rowAffected == 0)
+					preparedStatement.setInt(1, eid);
+					resultSet = preparedStatement.executeQuery();
+					if(resultSet != null)
 					{
-						System.out.println("Not Inserted Data successfully!!!!");
-					}else {
-						System.out.println("Inserted Data successfully!!!!");
+						if(resultSet.next() != false)
+						{
+							eid = resultSet.getInt(1);
+							ename = resultSet.getString(2);
+							sqlDob = resultSet.getDate(3);
+							sqlDom = resultSet.getDate(4);
+							sqlDoj = resultSet.getDate(5);
+							eaddress = resultSet.getString(6);
+							
+							sdf = new SimpleDateFormat("YYYY-MM-DD");
+							edob = sdf.format(sqlDob);
+							edom = sdf.format(sqlDom);
+							edoj = sdf.format(sqlDoj);
+							
+							System.out.println("------------------------------------------------");
+							System.out.println("Eid:: "+eid+"\t Ename:: "+ename+"\t Edob:: "+edob+"\t Edom:: "+edom+"\t Edoj:: "+edoj+"\t Eaddress:: "+eaddress);
+						}else {
+							System.out.println("Record is not available for given id");
+						}
 					}
 				}
 			}

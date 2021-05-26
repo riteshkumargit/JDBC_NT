@@ -12,30 +12,27 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.Scanner;
 
-public class MySqlDateInsertApp {
+public class MySqlPSBLOBInsertApp {
 
-	private static String SQLINSERTQUERY = "insert into employee values(?,?,?,?,?,?)";
+	private static String SQLINSERTQUERY = "insert into artist_info values(?,?,?,?,?)";
 	
 	public static void main(String[] args) {
 		
-		FileInputStream fileInputStream = null;
-		Properties properties = null;
+		FileInputStream imageFileInputStream = null;
+		FileInputStream videoFileInputStream = null;
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		Scanner scanner = null;
-		SimpleDateFormat sdf1 = null, sdf2 = null;
-		Date udob = null, udom = null;
-		java.sql.Date sqlDob = null, sqlDom = null, sqlDoj = null;
 		
 		int eid = 0;
 		String ename = null;
-		String edob = null;
-		String edom = null;
-		String edoj = null;
 		String eaddress = null;
+		String imagePath = null;
+		String videoPath = null;
 		
-		String fileName = "D:\\ABC\\AdvanceJava\\Jdbc1\\src\\com\\rits\\mysql\\jdbc\\resource\\" + args[0];
-		System.out.println(fileName);
+		String url = "jdbc:mysql://localhost:3306/abc";
+		String username = "root";
+		String password = "root";
 		
 		try {
 			scanner = new Scanner(System.in);
@@ -46,51 +43,19 @@ public class MySqlDateInsertApp {
 			System.out.println("Enter the employee name:: ");
 			ename = scanner.next();
 			
-			System.out.println("Enter the employee dob(DD-MM-YYYY):: ");
-			edob = scanner.next();
-			
-			System.out.println("Enter the employee dom(MM-DD-YYYY):: ");
-			edom = scanner.next();
-			
-			System.out.println("Enter the employee doj(YYYY-MM-DD):: ");
-			edoj = scanner.next();
-			
 			System.out.println("Enter the employee address:: ");
 			eaddress = scanner.next();
 			
-			fileInputStream = new FileInputStream(fileName);
-			properties = new Properties();
-			properties.load(fileInputStream);
+			System.out.println("Enter the employee image:: ");
+			imagePath = scanner.next();
 			
-			String url = properties.getProperty("jdbc.url");
-			String username = properties.getProperty("jdbc.username");
-			String password = properties.getProperty("jdbc.password");
+			System.out.println("Enter the employee video:: ");
+			videoPath = scanner.next();
 			
-			System.out.println(url);
-			System.out.println(username);
-			System.out.println(password);
 			
-			sdf1 = new SimpleDateFormat("dd-mm-yyyy");
 			
-			if(sdf1 != null)
-			{
-				udob = sdf1.parse(edob);
-				if(udob != null)
-				{
-					sqlDob = new java.sql.Date(udob.getTime());
-				}
-			}
-			
-			sdf2 = new SimpleDateFormat("MM-DD-YYYY");
-			if(sdf2 != null)
-			{
-				udom = sdf2.parse(edom);
-				if(udom != null)
-				{
-					sqlDom = new java.sql.Date(udom.getTime());
-				}
-			}
-			sqlDoj = java.sql.Date.valueOf(edoj);
+			imageFileInputStream = new FileInputStream(imagePath);
+			videoFileInputStream = new FileInputStream(videoPath);
 			
 			connection = DriverManager.getConnection(url,username,password);
 			if(connection != null)
@@ -100,10 +65,9 @@ public class MySqlDateInsertApp {
 				{
 					preparedStatement.setInt(1,eid);
 					preparedStatement.setString(2,ename);
-					preparedStatement.setDate(3,sqlDob);
-					preparedStatement.setDate(4,sqlDom);
-					preparedStatement.setDate(5,sqlDoj);
-					preparedStatement.setString(6, eaddress);
+					preparedStatement.setString(3,eaddress);
+					preparedStatement.setBinaryStream(4, imageFileInputStream);
+					preparedStatement.setBinaryStream(5, videoFileInputStream);
 					
 					int rowAffected = preparedStatement.executeUpdate();
 					
@@ -124,8 +88,16 @@ public class MySqlDateInsertApp {
 			System.out.println("The cause of the exception is ::" + e.getMessage());
 		} finally {
 			try {
-				if (fileInputStream != null) {
-					fileInputStream.close();
+				if (imageFileInputStream != null) {
+					imageFileInputStream.close();
+				}
+
+			} catch (Exception sqlException) {
+				System.out.println("The cause of the exception is ::" + sqlException.getMessage());
+			}
+			try {
+				if (videoFileInputStream != null) {
+					videoFileInputStream.close();
 				}
 
 			} catch (Exception sqlException) {
